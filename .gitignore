@@ -6,3 +6,5 @@ migrations/
 *.pyo
 *.pyd
 *.pdb
+*.DS_Store
+*.sqlite3
