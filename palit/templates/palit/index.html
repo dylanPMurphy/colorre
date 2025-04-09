@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Color Scheme Editor</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+        input[type="color"] {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            width: 100%;
+            height: 40px;
+            border-radius: 12px;
+            padding: 0;
+            background: none;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px #ccc;
+            transition: box-shadow 0.2s ease;
+        }
+
+        input[type="color"]:hover {
+            box-shadow: inset 0 0 0 2px #999;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border-radius: 12px;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 12px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(to right, #4caf50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #45a049, #3e9143);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        a {
+            text-decoration: none;
+            color: #007acc;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: flex; height: 100vh;">
+
+        <!-- LEFT: Live Preview -->
+        <div id="preview" style="flex: 1; display: flex; flex-direction: column;">
+
+            <!-- Header -->
+            <header id="header" style="padding: 20px; background-color: #222; color: white;">
+                <h1>My Styled Page</h1>
+            </header>
+
+            <div style="flex: 1; display: flex;">
+                <!-- Sidebar -->
+                <nav id="sidebar" style="width: 200px; background-color: #3a4f59; color: white; padding: 15px;">
+                    <p>Navigation</p>
+                    <ul>
+                        <li>Home</li>
+                        <li>About</li>
+                        <li>Contact</li>
+                    </ul>
+                </nav>
+
+                <!-- Content -->
+                <main style="flex: 1; padding: 20px;">
+                    <div id="mainText" style="color: #353439; font-size: 18px;">
+                        <p>This is a sample preview of your current color scheme.</p>
+                    </div>
+
+                    <div id="card" style="margin-top: 20px; padding: 20px; background-color: #ffffff; border-radius: 10px;">
+                        <h3>Card Title</h3>
+                        <p>This is a card that you can style with your own color.</p>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Footer -->
+            <footer id="footer" style="padding: 15px; background-color: #444; color: white; text-align: center;">
+                &copy; 2025 My Website
+            </footer>
+        </div>
+
+        <!-- RIGHT: Color Controls -->
+        <div style="width: 300px; background-color: #f4f4f4; padding: 20px; box-shadow: -2px 0 5px rgba(0,0,0,0.1); overflow-y: auto;">
+            <h2>🎨 Color Editor</h2>
+
+            <input type="text" id="schemeName" placeholder="Scheme Name">
+
+            <label>Background</label>
+            <input type="color" id="backgroundColor" value="#f3ae93">
+
+            <label>Menu</label>
+            <input type="color" id="menuColor" value="#3a4f59">
+
+            <label>Menu Text</label>
+            <input type="color" id="menuTextColor" value="#d5d6d9">
+
+            <label>Body Text</label>
+            <input type="color" id="textColor" value="#353439">
+
+            <label>Header</label>
+            <input type="color" id="headerColor" value="#222222">
+
+            <label>Sidebar</label>
+            <input type="color" id="sidebarColor" value="#3a4f59">
+
+            <label>Card</label>
+            <input type="color" id="cardColor" value="#ffffff">
+
+            <label>Footer</label>
+            <input type="color" id="footerColor" value="#444444">
+
+            <button onclick="saveScheme()">💾 Save Scheme</button>
+
+            <h3>Saved Schemes</h3>
+            <ul id="schemeList">
+                {% for scheme in schemes %}
+                    <li style="margin-bottom: 12px;">
+                        <a href="#" onclick="loadScheme({{ scheme.id }})">{{ scheme.name }}</a>
+                        <div style="display: flex; gap: 4px; margin-top: 4px;">
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.background }};" title="Background"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.menu }};" title="Menu"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.menu_text }};" title="Menu Text"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.text }};" title="Text"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.header }};" title="Header"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.sidebar }};" title="Sidebar"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.card }};" title="Card"></div>
+                            <div style="width: 16px; height: 16px; background-color: {{ scheme.footer }};" title="Footer"></div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const csrfToken = "{{ csrf_token }}";
+
+        function updatePreview() {
+            document.getElementById("preview").style.backgroundColor = document.getElementById("backgroundColor").value;
+        
+            // Apply 'sidebarColor' to the sidebar instead
+            document.getElementById("sidebar").style.backgroundColor = document.getElementById("sidebarColor").value;
+        
+            document.getElementById("mainText").style.color = document.getElementById("textColor").value;
+            document.getElementById("header").style.backgroundColor = document.getElementById("headerColor").value;
+            document.getElementById("card").style.backgroundColor = document.getElementById("cardColor").value;
+            document.getElementById("footer").style.backgroundColor = document.getElementById("footerColor").value;
+        }
+
+        ["backgroundColor", "menuColor", "textColor", "headerColor", "sidebarColor", "cardColor", "footerColor"].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        function saveScheme() {
+            const payload = {
+                name: document.getElementById("schemeName").value,
+                background: document.getElementById("backgroundColor").value,
+                menu: document.getElementById("menuColor").value,
+                menu_text: document.getElementById("menuTextColor").value,
+                text: document.getElementById("textColor").value,
+                header: document.getElementById("headerColor").value,
+                sidebar: document.getElementById("sidebarColor").value,
+                card: document.getElementById("cardColor").value,
+                footer: document.getElementById("footerColor").value,
+            };
+
+            fetch("/api/save/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to save");
+                return res.json();
+            })
+            .then(data => {
+                alert("Saved!");
+                location.reload();
+            })
+            .catch(error => {
+                console.error("Error saving scheme:", error);
+                alert("There was a problem saving the scheme.");
+            });
+        }
+
+        function loadScheme(id) {
+            fetch(`/api/load/${id}/`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("schemeName").value = data.name;
+                    document.getElementById("backgroundColor").value = data.background;
+                    document.getElementById("menuColor").value = data.menu;
+                    document.getElementById("menuTextColor").value = data.menu_text;
+                    document.getElementById("textColor").value = data.text;
+                    document.getElementById("headerColor").value = data.header;
+                    document.getElementById("sidebarColor").value = data.sidebar;
+                    document.getElementById("cardColor").value = data.card;
+                    document.getElementById("footerColor").value = data.footer;
+                    updatePreview();
+                });
+        }
+
+        updatePreview(); // initial
+    </script>
+</body>
+</html>
